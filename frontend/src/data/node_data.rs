@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use dioxus::prelude::macro_helpers::const_serialize::SerializeConst;
 use reqwest::{Error, Response};
 use serde::{Deserialize, Serialize};
 
@@ -10,9 +9,10 @@ use crate::fecth::node_fecth::NodeFecth;
 
 pub trait IntoDataNodes {
     fn new(search_request: String) -> Self;
+    #[allow(async_fn_in_trait)]
     async fn get_accounts(&self) -> Result<Response, Error>;
 }
-#[derive(Clone,Debug,Deserialize,Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DataNode {
     search_request: String,
 }
