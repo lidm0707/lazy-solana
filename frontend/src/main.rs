@@ -16,38 +16,44 @@ fn main() {
     dioxus::launch(App);
 }
 
-pub fn  search_account (address_input:String,nodes:PropNodes,is_loading:Signal<bool>,error:Signal<Option<String>>) {
-            spawn({
-                let mut error = error.to_owned();
-                let nodes = nodes.to_owned();
-                let mut is_loading_clone = is_loading.to_owned();
-                let address_input = address_input.to_owned();
-                let client = DataNode::new(address_input.clone());
-                async move {
-                    is_loading_clone.set(true);
-                    let client = client.get_accounts().await;
-                    let mut nodes = nodes.to_owned();
+pub fn search_account<T>(
+    _fecth_struct: T,
+    address_input: String,
+    nodes: PropNodes,
+    is_loading: Signal<bool>,
+    error: Signal<Option<String>>,
+) where
+    T: IntoDataNodes + 'static,
+{
+    spawn({
+        let mut error = error.to_owned();
+        let nodes = nodes.to_owned();
+        let mut is_loading_clone = is_loading.to_owned();
+        let address_input = address_input.to_owned();
+        let client = T::new(address_input.clone());
+        async move {
+            is_loading_clone.set(true);
+            let client = client.get_accounts().await;
+            let mut nodes = nodes.to_owned();
 
-                    match client {
-                        Ok(response) => match response.json::<Vec<AccountInfo>>().await {
-                            Ok(fetched) => {
-                                nodes.set_prop_nodes(address_input.clone(), fetched);
-                            }
-                            Err(e) => {
-                                error.set(Some(format!("Failed to parse search results: {}", e)));
-                            }
-                        },
-                        Err(e) => {
-                            error.set(Some(format!("Search request failed: {}", e)));
-                        }
+            match client {
+                Ok(response) => match response.json::<Vec<AccountInfo>>().await {
+                    Ok(fetched) => {
+                        nodes.set_prop_nodes(address_input.clone(), fetched);
                     }
-
-                    is_loading_clone.set(false);
+                    Err(e) => {
+                        error.set(Some(format!("Failed to parse search results: {}", e)));
+                    }
+                },
+                Err(e) => {
+                    error.set(Some(format!("Search request failed: {}", e)));
                 }
-            });
-       
-        }
+            }
 
+            is_loading_clone.set(false);
+        }
+    });
+}
 
 #[component]
 fn App() -> Element {
@@ -56,7 +62,8 @@ fn App() -> Element {
     let error = use_signal(|| None::<String>);
     let is_loading = use_signal(|| false);
     let mut address_input = use_signal(|| "kJpCEdgKBL1T4N5zjdoe5bGn8kNFMwmX6bKmdMjSXen".to_owned());
-    
+    let data_node = DataNode::new(address_input.cloned());
+
     rsx! {
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         div { class: "h-screen w-full bg-gray-100",
@@ -66,7 +73,9 @@ fn App() -> Element {
                 div { class: "mb-4 p-4 bg-white rounded shadow",
                     h2 { class: "text-lg font-semibold mb-2", "Search Account" }
                     div { class: "flex gap-2",
-                        { let nodes = nodes.to_owned();
+                        {
+                            let nodes = nodes.to_owned();
+                            let data_node = data_node.to_owned();
                             rsx! {
                                 input {
                                     class: "flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500",
@@ -78,7 +87,13 @@ fn App() -> Element {
                                         if e.key() == Key::Enter {
                                             let address = address_input.read().clone();
                                             if !address.trim().is_empty() {
-                                                search_account(address,nodes.to_owned(),is_loading,error);
+                                                search_account(
+                                                    data_node.to_owned(),
+                                                    address,
+                                                    nodes.to_owned(),
+                                                    is_loading,
+                                                    error,
+                                                );
                                             }
                                         }
                                     },
@@ -92,7 +107,13 @@ fn App() -> Element {
                             onclick: move |_| {
                                 let address = address_input.read().clone();
                                 if !address.trim().is_empty() {
-                                    search_account(address,nodes.to_owned(),is_loading,error);
+                                    search_account(
+                                        data_node.to_owned(),
+                                        address,
+                                        nodes.to_owned(),
+                                        is_loading,
+                                        error,
+                                    );
                                 }
                             },
                             if *is_loading.read() {
@@ -158,7 +179,7 @@ fn App() -> Element {
                             }
                         }
                     }
-
+                    
                     for node in nodes.to_owned().list_nodes.read().to_owned().into_iter() {
                         Node { prop: node.to_owned(), id: node.id }
                     }

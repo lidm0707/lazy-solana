@@ -1,26 +1,26 @@
 use std::collections::HashMap;
 
+use dioxus::prelude::macro_helpers::const_serialize::SerializeConst;
 use reqwest::{Error, Response};
+use serde::{Deserialize, Serialize};
 
 use crate::fecth::node_fecth::NodeFecth;
 
 //http://127.0.0.1:3000/
 
 pub trait IntoDataNodes {
+    fn new(search_request: String) -> Self;
     async fn get_accounts(&self) -> Result<Response, Error>;
 }
-
+#[derive(Clone,Debug,Deserialize,Serialize)]
 pub struct DataNode {
     search_request: String,
 }
 
-impl DataNode {
-    pub fn new(search_request: String) -> Self {
+impl IntoDataNodes for DataNode {
+    fn new(search_request: String) -> Self {
         DataNode { search_request }
     }
-}
-
-impl IntoDataNodes for DataNode {
     async fn get_accounts(&self) -> Result<Response, Error> {
         let node_fetch = NodeFecth::new("http://127.0.0.1:3000".to_owned());
         let mut json: HashMap<String, String> = HashMap::new();
