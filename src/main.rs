@@ -2,16 +2,10 @@ use dioxus::prelude::*;
 use lazry_solana::{
     components::{
         canvas_component::canvas::Canvas,
-        node_component::{
-            node::Node,
-            // AccountInfo is removed as it's no longer directly used in this file
-            node_hook::{PropNodes, use_nodes},
-        },
+        node_component::{node::Node, node_hook::use_nodes},
     },
-    // Import the search_account function from its new location
     fecth::rpc_service::search_account,
 };
-// Removed reqwest, serde_json, and HashMap imports as they are no longer needed here
 
 const TAILWIND_CSS: Asset = asset!("./assets/output.css");
 
@@ -19,24 +13,20 @@ fn main() {
     dioxus::launch(App);
 }
 
-// search_account function has been moved to frontend/src/fecth/rpc_service.rs
-// extract_accounts_data function has been moved to frontend/src/fecth/rpc_service.rs
-
 #[component]
 fn App() -> Element {
     let nodes = use_nodes();
     let error = use_signal(|| None::<String>);
-    let is_dark_mode = use_signal(|| true); // Default to dark mode
+    let is_dark_mode = use_signal(|| true);
     let mut address_input = use_signal(|| "kJpCEdgKBL1T4N5zjdoe5bGn8kNFMwmX6bKmdMjSXen".to_owned());
     let node_onkeypress = nodes.to_owned();
-    let mut is_dark_mode_for_toggle = is_dark_mode.to_owned(); // Clone for the toggle button
+    let mut is_dark_mode_for_toggle = is_dark_mode.to_owned();
     rsx! {
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         div {
             class: format!("h-screen w-full flex flex-col {} {}",
                            if *is_dark_mode.read() { "dark" } else { "" },
                            if *is_dark_mode.read() { "bg-slate-900" } else { "bg-gray-100" }),
-            // Header and Search Section
             div { class: "p-4 bg-white dark:bg-slate-800 shadow-md",
                 div { class: "flex justify-between items-center",
                     h1 { class: "text-3xl font-bold text-purple-600 dark:text-purple-400", "Solana Account Graph Explorer" }
@@ -92,7 +82,6 @@ fn App() -> Element {
                         }
                     }
                 }
-                // Error Display Section
                 if let Some(error_message) = &*error.read() {
                     div { class: "max-w-xl mx-auto mt-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700/50 text-red-700 dark:text-red-400 rounded-md shadow",
                         "Error: {error_message}"
@@ -100,8 +89,7 @@ fn App() -> Element {
                 }
             }
 
-            // Canvas Section - takes remaining space
-            div { class: "flex-grow p-4", // Background will be inherited from the main 'dark' div
+            div { class: "flex-grow p-4",
                 Canvas {
                     nodes: nodes.to_owned(),
                     is_dark_mode: *is_dark_mode.read(),
@@ -138,4 +126,3 @@ fn App() -> Element {
         }
     }
 }
-// Render edges
