@@ -1512,18 +1512,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "frontend"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "dioxus",
- "reqwest",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "futf"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2464,6 +2452,18 @@ dependencies = [
  "indexmap 1.9.3",
  "matches",
  "selectors",
+]
+
+[[package]]
+name = "lazry-solana"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "dioxus",
+ "reqwest",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

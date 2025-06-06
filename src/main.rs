@@ -1,11 +1,11 @@
 use dioxus::prelude::*;
-use frontend::{
+use lazry_solana::{
     components::{
         canvas_component::canvas::Canvas,
         node_component::{
             node::Node,
             // AccountInfo is removed as it's no longer directly used in this file
-            node_hook::{use_nodes, PropNodes},
+            node_hook::{PropNodes, use_nodes},
         },
     },
     // Import the search_account function from its new location
