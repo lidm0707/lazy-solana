@@ -1,14 +1,10 @@
 use dioxus::prelude::*;
 use reqwest::Client;
 use serde_json::json;
-
+//https://solana.com/docs/rpc/http/getaccountinfo
 use crate::components::node_component::node_hook::{AccountInfo, PropNodes};
 
-pub fn search_account(
-    address_input: String,
-    nodes: PropNodes,
-    error: Signal<Option<String>>,
-) {
+pub fn search_account(address_input: String, nodes: PropNodes, error: Signal<Option<String>>) {
     spawn(async move {
         let mut error = error.to_owned();
         let mut nodes = nodes.to_owned();
@@ -63,7 +59,6 @@ pub fn search_account(
                 error.set(Some(format!("RPC request failed: {}", e)));
             }
         }
-
     });
 }
 
@@ -117,7 +112,10 @@ fn extract_accounts_data(json: &serde_json::Value) -> Vec<AccountInfo> {
                 }
             } else {
                 // Print a warning if pubkey is missing or wrong type for an item
-                eprintln!("Warning: Could not extract pubkey from item: {:?}. Skipping item.", item);
+                eprintln!(
+                    "Warning: Could not extract pubkey from item: {:?}. Skipping item.",
+                    item
+                );
             }
         }
     } else {
