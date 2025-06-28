@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use reqwest::Client;
-use serde_json::json;
+use serde_json::{Value, json};
 //https://solana.com/docs/rpc/http/getaccountinfo
 use crate::components::node_component::node_hook::{AccountInfo, PropNodes};
 
@@ -132,4 +132,201 @@ fn extract_accounts_data(json: &serde_json::Value) -> Vec<AccountInfo> {
     }
 
     accounts // Return the vector of parsed AccountInfo
+}
+
+pub fn fetch_account_info(text: Signal<String>, address: &str) {
+    // Clone address for use in the async block
+    let address = address.to_owned();
+    spawn(async move {
+        // This async block returns ()
+        let client = Client::new();
+        let rpc_url = "https://api.devnet.solana.com"; // *** REPLACE THIS WITH YOUR SOLANA RPC URL ***
+
+        let request_body = json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getAccountInfo",
+            "params": [
+                address, // Use the cloned address
+                {
+                     "encoding": "jsonParsed" // Request data in jsonParsed format
+                }
+            ]
+        });
+
+        // Explicitly handle the Result from the send() call
+        match client.post(rpc_url).json(&request_body).send().await {
+            Ok(response) => {
+                // Check if the HTTP status is successful
+                if response.status().is_success() {
+                    // Explicitly handle the Result from the json() call
+                    match response.json::<Value>().await {
+                        Ok(json_value) => {
+                            // Success: Update the text signal with the formatted JSON
+                            text.to_owned().set(format!(
+                                "{}",
+                                serde_json::to_string_pretty(&json_value)
+                                    .unwrap_or_else(|_| "Failed to format JSON".to_string())
+                            ));
+                        }
+                        Err(e) => {
+                            // Error parsing JSON
+                            eprintln!("Failed to parse response JSON: {}", e);
+                            text.to_owned()
+                                .set(format!("Error parsing response JSON: {}", e));
+                        }
+                    }
+                } else {
+                    // HTTP request was not successful (e.g., 404, 500)
+                    let status = response.status();
+                    let err_msg = response
+                        .text()
+                        .await
+                        .unwrap_or_else(|_| "Unknown error getting response text".to_string());
+                    eprintln!("RPC request failed with status {}: {}", status, err_msg);
+                    text.to_owned().set(format!(
+                        "RPC request failed with status {}: {}",
+                        status, err_msg
+                    ));
+                }
+            }
+            Err(e) => {
+                // Error sending the request (e.g., network issue)
+                eprintln!("RPC request failed: {}", e);
+                text.to_owned().set(format!("RPC request failed: {}", e));
+            }
+        }
+    });
+}
+
+pub fn fetch_signatures_for_address(text: Signal<String>, address: &str) {
+    // Clone address for use in the async block
+    let address = address.to_owned();
+    spawn(async move {
+        // This async block returns ()
+        let client = Client::new();
+        let rpc_url = "https://api.devnet.solana.com"; // *** REPLACE THIS WITH YOUR SOLANA RPC URL ***
+
+        let request_body = json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getSignaturesForAddress",
+            "params": [
+                address, // Use the cloned address
+                {
+                    "limit": 10 // Specify a limit
+                    // Add before and until options if needed for pagination
+                }
+            ]
+        });
+
+        // Explicitly handle the Result from the send() call
+        match client.post(rpc_url).json(&request_body).send().await {
+            Ok(response) => {
+                // Check if the HTTP status is successful
+                if response.status().is_success() {
+                    // Explicitly handle the Result from the json() call
+                    match response.json::<Value>().await {
+                        Ok(json_value) => {
+                            // Success: Update the text signal with the formatted JSON
+                            text.to_owned().set(format!(
+                                "{}",
+                                serde_json::to_string_pretty(&json_value)
+                                    .unwrap_or_else(|_| "Failed to format JSON".to_string())
+                            ));
+                        }
+                        Err(e) => {
+                            // Error parsing JSON
+                            eprintln!("Failed to parse response JSON: {}", e);
+                            text.to_owned()
+                                .set(format!("Error parsing response JSON: {}", e));
+                        }
+                    }
+                } else {
+                    // HTTP request was not successful (e.g., 404, 500)
+                    let status = response.status();
+                    let err_msg = response
+                        .text()
+                        .await
+                        .unwrap_or_else(|_| "Unknown error getting response text".to_string());
+                    eprintln!("RPC request failed with status {}: {}", status, err_msg);
+                    text.to_owned().set(format!(
+                        "RPC request failed with status {}: {}",
+                        status, err_msg
+                    ));
+                }
+            }
+            Err(e) => {
+                // Error sending the request (e.g., network issue)
+                eprintln!("RPC request failed: {}", e);
+                text.to_owned().set(format!("RPC request failed: {}", e));
+            }
+        }
+    });
+}
+
+pub fn fetch_transaction(mut text: Signal<String>, signature: &str) {
+    // Clone signature for use in the async block
+    let signature = signature.to_owned();
+    spawn(async move {
+        // This async block returns ()
+        let client = Client::new();
+        let rpc_url = "https://api.devnet.solana.com"; // *** REPLACE THIS WITH YOUR SOLANA RPC URL ***
+
+        let request_body = json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "getTransaction",
+            "params": [
+                signature, // Use the cloned signature
+                {
+                    "encoding": "jsonParsed", // Request data in jsonParsed format
+                    "maxSupportedTxVersion": 0 // Use 0 for legacy and versioned transactions
+                }
+            ]
+        });
+
+        // Explicitly handle the Result from the send() call
+        match client.post(rpc_url).json(&request_body).send().await {
+            Ok(response) => {
+                // Check if the HTTP status is successful
+                if response.status().is_success() {
+                    // Explicitly handle the Result from the json() call
+                    match response.json::<Value>().await {
+                        Ok(json_value) => {
+                            // Success: Update the text signal with the formatted JSON
+                            text.to_owned().set(format!(
+                                "{}",
+                                serde_json::to_string_pretty(&json_value)
+                                    .unwrap_or_else(|_| "Failed to format JSON".to_string())
+                            ));
+                        }
+                        Err(e) => {
+                            // Error parsing JSON
+                            eprintln!("Failed to parse response JSON: {}", e);
+                            text.to_owned()
+                                .set(format!("Error parsing response JSON: {}", e));
+                        }
+                    }
+                } else {
+                    // HTTP request was not successful (e.g., 404, 500)
+                    let status = response.status();
+                    let err_msg = response
+                        .text()
+                        .await
+                        .unwrap_or_else(|_| "Unknown error getting response text".to_string());
+                    eprintln!("RPC request failed with status {}: {}", status, err_msg);
+                    text.to_owned().set(format!(
+                        "RPC request failed with status {}: {}",
+                        status, err_msg
+                    ));
+                }
+            }
+            Err(e) => {
+                // Error sending the request (e.g., network issue)
+                eprintln!("RPC request failed: {}", e);
+                text.set(format!("RPC request failed: {}", e));
+            }
+        }
+    });
 }

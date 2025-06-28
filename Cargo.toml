@@ -7,12 +7,16 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+reslt = { path = "../reslt" }
+# //tokio can't use in web
+
 anyhow = "1.0.98"
 async-trait = "0.1.88"
 dioxus = { version = "0.6", features = ["router"] }
 reqwest = { version = "0.12", features = ["json"] }
-serde = "1.0.219"
-serde_json = "1.0"                                  # Or a compatible version
+serde = { version = "1.0", features = ["derive"] }
+
+serde_json = "1.0" # Or a compatible version
 
 [features]
 default = ["web"]

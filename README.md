@@ -16,7 +16,7 @@ project/
 3. Run the following command in the root of the project to start the Tailwind CSS compiler:
 
 ```bash
-npx tailwindcss -i ./tailwind.css -o ./assets/tailwind.css --watch
+npx tailwindcss -i ./assets/input.css -o ./assets/output.css --watch
 ```
 
 ### Serving Your App
@@ -31,4 +31,3 @@ To run for a different platform, use the `--platform platform` flag. E.g.
 ```bash
 dx serve --platform desktop
 ```
-

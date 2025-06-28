@@ -1,12 +1,13 @@
-use dioxus::prelude::*;
-
 use crate::theme::Theme;
+use dioxus::prelude::*;
 #[component]
 pub fn Layout(children: Element) -> Element {
     let layout_theme = use_context::<Signal<Theme>>()() == Theme::Dark;
     rsx! {
+        div{class:" h-screen w-screen ",
+
         div {
-            class: format!("h-screen w-full flex flex-col {} {}",
+            class: format!("flex flex-col {} {}",
                            if layout_theme { "dark" } else { "" },
                            if  layout_theme{ "bg-slate-900" } else { "bg-gray-100" }),
             div { class: "p-4 bg-white dark:bg-slate-800 shadow-md",
@@ -33,6 +34,8 @@ pub fn Layout(children: Element) -> Element {
             }
             {children}
 
-        }
+
+    }
+    }
     }
 }
