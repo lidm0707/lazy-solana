@@ -31,11 +31,7 @@ pub fn ModalWord() -> Element {
     }
 }
 #[component]
-pub fn Search(
-    address_input: Signal<String>,
-    nodes: PropNodes,
-    error: Signal<Option<String>>,
-) -> Element {
+pub fn Search(nodes: PropNodes, error: Signal<Option<String>>) -> Element {
     rsx! {
         div { class: "max-w-xl mx-auto p-6 mt-6 bg-gray-50 dark:bg-slate-700 rounded-lg shadow",
             h2 { class: "text-xl font-semibold text-gray-700 dark:text-slate-300 mb-3 text-center", "Search Program Accounts" }
