@@ -13,13 +13,13 @@ use dioxus::prelude::*;
 use reslt::prelude::*;
 use serde::Serialize;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, FieldAccessible)]
-struct MyData {
-    id: u64,
-    name: String,
-    style: String,
-    description: String,
-    details: String,
-    details_style: String,
+pub struct MyData {
+    pub id: u64,
+    pub name: String,
+    pub style: String,
+    pub description: String,
+    pub details: String,
+    pub details_style: String,
 }
 
 pub fn create_col() -> PropCol<MyData> {
