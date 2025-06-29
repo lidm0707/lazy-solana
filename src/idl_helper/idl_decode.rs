@@ -1,119 +1,171 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
+use dioxus_logger::tracing;
 
 pub fn use_spec_idl(idl_types: Vec<String>, data: &[u8]) -> Result<Vec<String>> {
     let mut result: Vec<String> = Vec::new();
     let mut position_data = 0usize;
 
-    for i in idl_types.into_iter() {
-        match i.as_str() {
+    tracing::debug!("types: {:?}", &data[0..7]);
+    let data = &data[8..];
+    tracing::debug!("u8: {:?}", data);
+    for idl_type in idl_types.into_iter() {
+        match idl_type.as_str() {
             "string" => {
                 let len_bytes_start = position_data;
-                let len_bytes_end = len_bytes_start + 4;
-                println!("{:?}", len_bytes_end);
-                // Check if there are enough bytes for the string length
-                if len_bytes_end > data.len() {
-                } else {
-                    let length =
-                        u32::from_le_bytes(data[len_bytes_start..len_bytes_end].try_into()?);
-                    println!("{:?}", length);
-
-                    let string_data_start = len_bytes_end;
-                    let string_data_end = string_data_start + length as usize;
-
-                    // Check if there are enough bytes for the actual string data
-                    if string_data_end > data.len() {}
-                    let string_data = data[string_data_start..string_data_end].to_vec();
-                    result.push(String::from_utf8(string_data)?); // Use '?' for error propagation
-                    position_data = string_data_end;
+                // Check if enough bytes exist for string length (4 bytes for u32)
+                if position_data + 4 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for string length at position {}",
+                        position_data
+                    ));
                 }
+                let length =
+                    u32::from_le_bytes(data[position_data..len_bytes_start + 4].try_into()?);
+                position_data += 4;
+
+                let end_string = position_data + length as usize;
+                if end_string > data.len() {
+                    tracing::debug!("position_data: {:?}", position_data);
+                    tracing::debug!(" data.len(): {:?}", data.len());
+                    tracing::debug!("length: {:?}", length);
+                    tracing::debug!("end_string: {:?}", end_string);
+                    return Err(anyhow!(
+                        "Not enough bytes for string data of length {} at position {}",
+                        length,
+                        position_data
+                    ));
+                }
+
+                let string_data = data[position_data..end_string].to_vec();
+                result.push(String::from_utf8(string_data)?);
+                position_data = end_string;
             }
             "u8" => {
-                let end_pos = position_data + 1;
-                if end_pos > data.len() {}
+                if position_data + 1 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for u8 at position {}",
+                        position_data
+                    ));
+                }
                 let value = data[position_data];
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 1;
             }
             "u16" => {
-                let end_pos = position_data + 2;
-                if end_pos > data.len() {}
-                let bytes: [u8; 2] = data[position_data..end_pos].try_into()?;
+                if position_data + 2 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for u16 at position {}",
+                        position_data
+                    ));
+                }
+                let bytes: [u8; 2] = data[position_data..position_data + 2].try_into()?;
                 let value = u16::from_le_bytes(bytes);
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 2;
             }
             "u32" => {
-                let end_pos = position_data + 4;
-                if end_pos > data.len() {}
-                let bytes: [u8; 4] = data[position_data..end_pos].try_into()?;
+                if position_data + 4 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for u32 at position {}",
+                        position_data
+                    ));
+                }
+                let bytes: [u8; 4] = data[position_data..position_data + 4].try_into()?;
                 let value = u32::from_le_bytes(bytes);
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 4;
             }
             "u64" => {
-                let end_pos = position_data + 8;
-                if end_pos > data.len() {}
-                let bytes: [u8; 8] = data[position_data..end_pos].try_into()?;
+                if position_data + 8 > data.len() {
+                    tracing::debug!("u64: {:?}", position_data + 8);
+
+                    return Err(anyhow!(
+                        "Not enough bytes for u64 at position {}",
+                        position_data
+                    ));
+                }
+                let bytes: [u8; 8] = data[position_data..position_data + 8].try_into()?;
                 let value = u64::from_le_bytes(bytes);
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 8;
             }
             "u128" => {
-                let end_pos = position_data + 16;
-                if end_pos > data.len() {}
-                let bytes: [u8; 16] = data[position_data..end_pos].try_into()?;
+                if position_data + 16 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for u128 at position {}",
+                        position_data
+                    ));
+                }
+                let bytes: [u8; 16] = data[position_data..position_data + 16].try_into()?;
                 let value = u128::from_le_bytes(bytes);
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 16;
             }
             "i8" => {
-                let end_pos = position_data + 1;
-                if end_pos > data.len() {}
-                // For single-byte types, `try_into()` to `[u8; 1]` is fine
-                // or you could simply cast: `data[position_data] as i8`
-                let value = i8::from_le_bytes(data[position_data..end_pos].try_into()?);
+                if position_data + 1 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for i8 at position {}",
+                        position_data
+                    ));
+                }
+                let value = data[position_data] as i8;
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 1;
             }
             "i16" => {
-                let end_pos = position_data + 2;
-                if end_pos > data.len() {}
-                let bytes: [u8; 2] = data[position_data..end_pos].try_into()?;
+                if position_data + 2 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for i16 at position {}",
+                        position_data
+                    ));
+                }
+                let bytes: [u8; 2] = data[position_data..position_data + 2].try_into()?;
                 let value = i16::from_le_bytes(bytes);
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 2;
             }
             "i32" => {
-                let end_pos = position_data + 4;
-                if end_pos > data.len() {}
-                let bytes: [u8; 4] = data[position_data..end_pos].try_into()?;
+                if position_data + 4 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for i32 at position {}",
+                        position_data
+                    ));
+                }
+                let bytes: [u8; 4] = data[position_data..position_data + 4].try_into()?;
                 let value = i32::from_le_bytes(bytes);
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 4;
             }
             "i64" => {
-                let end_pos = position_data + 8;
-                if end_pos > data.len() {}
-                let bytes: [u8; 8] = data[position_data..end_pos].try_into()?;
+                if position_data + 8 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for i64 at position {}",
+                        position_data
+                    ));
+                }
+                let bytes: [u8; 8] = data[position_data..position_data + 8].try_into()?;
                 let value = i64::from_le_bytes(bytes);
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 8;
             }
             "i128" => {
-                let end_pos = position_data + 16;
-                if end_pos > data.len() {}
-                let bytes: [u8; 16] = data[position_data..end_pos].try_into()?;
+                if position_data + 16 > data.len() {
+                    return Err(anyhow!(
+                        "Not enough bytes for i128 at position {}",
+                        position_data
+                    ));
+                }
+                let bytes: [u8; 16] = data[position_data..position_data + 16].try_into()?;
                 let value = i128::from_le_bytes(bytes);
                 result.push(value.to_string());
-                position_data = end_pos;
+                position_data += 16;
             }
             _ => {
-                // If an unknown type is encountered, return an error.
-                // Alternatively, you could skip it or handle it based on your requirements.
+                return Err(anyhow!("Unknown IDL type: {}", idl_type));
             }
         }
     }
+    tracing::debug!("result: {:?}", result);
 
-    // Return the result wrapped in Ok()
     Ok(result)
 }

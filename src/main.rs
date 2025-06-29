@@ -1,8 +1,13 @@
-use dioxus::prelude::*;
-use lazry_solana::{pages::home::page::Home, theme::Theme};
+use dioxus::{logger::tracing, prelude::*};
+use tracing::Level;
+
+use lazry_solana::{
+    components::table_component::table_data::AccountDetail, pages::home::page::Home, theme::Theme,
+};
 use reslt::prelude::*;
 
 fn main() {
+    let _ = dioxus_logger::init(Level::DEBUG);
     dioxus::launch(App);
 }
 
@@ -10,9 +15,16 @@ fn main() {
 fn App() -> Element {
     const TAILWIND_CSS: Asset = asset!("./assets/output.css");
     // let word = use_signal(|| "kJpCEdgKBL1T4N5zjdoe5bGn8kNFMwmX6bKmdMjSXen".to_owned());
-
+    use_context_provider(|| {
+        Signal::new(AccountDetail {
+            programe_addr: "".to_string(),
+            discriminator: vec![],
+            name_account: "".to_string(),
+            fields: vec![],
+        })
+    });
     use_context_provider(|| Signal::new(Theme::Dark));
-    #[warn(unused_variables)]
+
     let raw = r#"
         {
           "address": "8R5SnEabSDANPR3gtqwJDsrWDKZeuRwgjXohHBvvwuHp",

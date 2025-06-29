@@ -7,6 +7,7 @@ pub struct PropNode {
     pub id: usize,
     pub x: f32,
     pub y: f32,
+    pub discriminator: Vec<u8>,
     pub name_account: String,
     pub fields: Vec<IDLNodeField>,
 }
@@ -31,6 +32,7 @@ impl PropNodes {
             id: 0,
             x: 300.0,
             y: 100.0,
+            discriminator: vec![],
             name_account: addr_program, // Initialize account_data as an empty vector
             fields: Vec::new(),         // Initialize executable as false
         });
@@ -44,6 +46,7 @@ impl PropNodes {
                 id: node_id,
                 x: 100.0 + (node_id % 5) as f32 * 100.0, // Use node_id for layout consistency
                 y: 200.0 + (node_id / 5) as f32 * 100.0, // Use node_id for layout consistency
+                discriminator: account.discriminator.clone(),
                 name_account: account.name.clone(), // Initialize account_data as an empty vector
                 fields: account.fields.clone(),     // Initialize executable as false
             });

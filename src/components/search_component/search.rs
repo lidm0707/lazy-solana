@@ -53,10 +53,7 @@ pub fn Search(nodes: PropNodes, error: Signal<Option<String>>) -> Element {
                         let   word: Signal<String> = use_context();
                         // search_account(word(),node_onkeypress.to_owned(),error.to_owned());
                         let  idl  = Idl::new(word());
-
                         let accounts = idl.get_idl_idl_node();
-
-
                         nodes.set_prop_nodes(idl.address,accounts);
                         println!("{:?}",nodes);
 
