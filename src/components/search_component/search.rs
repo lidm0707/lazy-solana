@@ -1,8 +1,4 @@
-use crate::{
-    components::node_component::node_hook::{AccountInfo, PropNodes},
-    fecth::rpc_service::search_account,
-    idl_helper::idl::Idl,
-};
+use crate::{components::node_component::node_hook::PropNodes, idl_helper::idl::Idl};
 use dioxus::prelude::*;
 use reslt::prelude::*;
 #[component]
@@ -40,8 +36,6 @@ pub fn Search(
     nodes: PropNodes,
     error: Signal<Option<String>>,
 ) -> Element {
-    let node_onkeypress = nodes.to_owned();
-
     rsx! {
         div { class: "max-w-xl mx-auto p-6 mt-6 bg-gray-50 dark:bg-slate-700 rounded-lg shadow",
             h2 { class: "text-xl font-semibold text-gray-700 dark:text-slate-300 mb-3 text-center", "Search Program Accounts" }
@@ -64,28 +58,12 @@ pub fn Search(
                         // search_account(word(),node_onkeypress.to_owned(),error.to_owned());
                         let  idl  = Idl::new(word());
 
-                        let accounts = idl.get_idl_accounts();
-                        let mut  data = Vec::<AccountInfo>::new();
-                        // pub struct AccountInfo {
-                        //     pub pubkey: String,
-                        //     pub lamports: u64,
-                        //     pub executable: bool,
-                        //     pub account_data: String, // To store the string representation of account's data field
-                        // }
-                         println!("check {:?}",accounts);
-                        for account in accounts.iter() {
-                            let mut parts = account.split("::::");
-                            let field = parts.next().unwrap_or(""); // ค่าแรก
-                            let tp = parts.next().unwrap_or("");    // ค่าที่สอง
-                            data.push(AccountInfo {
-                                pubkey: field.to_string(),
-                                lamports: 0,
-                                executable: false,
-                                account_data: tp.to_string(),
-                            });
-                        }
+                        let accounts = idl.get_idl_idl_node();
 
-                        nodes.set_prop_nodes(idl.address,data);
+
+                        nodes.set_prop_nodes(idl.address,accounts);
+                        println!("{:?}",nodes);
+
 
 
                     },

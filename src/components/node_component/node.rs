@@ -7,17 +7,13 @@ use super::node_hook::PropNode;
 #[component]
 pub fn Node(prop: PropNode, id: usize) -> Element {
     let mut select = use_signal(|| false);
-    let pubkey = prop.data.get("pubkey").cloned().unwrap_or_default();
 
-    if id == 0 { // Program ID Node
-        let display_pubkey = if pubkey.len() > 20 {
-            format!("{}...{}", &pubkey[..8], &pubkey[pubkey.len()-8..])
-        } else {
-            pubkey.clone()
-        };
-        let rect_width = 220.0;
+    if id == 0 {
+        let programe_id = &prop.name_account;
+        let base_width = 100.0;
+        let char_width = 10.0;
+        let rect_width = base_width + programe_id.len() as f32 * char_width;
         let rect_height = 40.0;
-
         let fill_color = "lightcoral"; // Always light mode
         let stroke_color = if *select.read() { "black" } else { "darkred" }; // Always light mode
         let text_color = "black"; // Always light mode
@@ -49,34 +45,11 @@ pub fn Node(prop: PropNode, id: usize) -> Element {
                 font_size: "12",
                 fill: "{text_color}",
                 style: "user-select: none; pointer-events: none;",
-                "Program ID: {display_pubkey}"
+                "Program ID: {programe_id}"
             }
         }
-    } else { // Account Nodes
-        let display_pubkey = if pubkey.len() > 8 {
-            format!("{}...", &pubkey[..8])
-        } else {
-            pubkey.clone()
-        };
-        let sol = prop.lamports as f64 / 1_000_000_000.0;
-        let lamports_text = format!("{:.4} SOL", sol);
-        let executable_text = if prop.executable { "Exec: Yes" } else { "Exec: No" };
-        
-        let account_data_str = &prop.account_data_display;
-        let max_data_len = 20; // Max length for data string preview
-        let data_preview = if account_data_str.len() > max_data_len {
-            // Ensure we don't panic on short strings if max_data_len is small
-            let end_index = max_data_len.saturating_sub(3);
-            if end_index > 0 && end_index <= account_data_str.len() {
-                 format!("Data: {}...", &account_data_str[..end_index])
-            } else if !account_data_str.is_empty() {
-                format!("Data: {}", account_data_str) // Show full if too short to truncate with "..."
-            } else {
-                String::from("Data: (empty)")
-            }
-        } else {
-            format!("Data: {}", account_data_str)
-        };
+    } else {
+        let account_name = prop.name_account;
 
         let rect_width = 160.0; // Slightly wider for more data
         let rect_height = 90.0; // Increased height for four lines
@@ -86,15 +59,11 @@ pub fn Node(prop: PropNode, id: usize) -> Element {
         // Total height of text block = 3 * line_spacing
         // Top of text block = prop.y - (1.5 * line_spacing)
         let y_line1 = prop.y - 1.5 * line_spacing;
-        let y_line2 = prop.y - 0.5 * line_spacing;
-        let y_line3 = prop.y + 0.5 * line_spacing;
-        let y_line4 = prop.y + 1.5 * line_spacing;
 
         let fill_color = "lightblue"; // Always light mode
         let stroke_color = if *select.read() { "red" } else { "navy" }; // Always light mode
         let main_text_color = "black"; // Always light mode
         let data_text_color = "dimgray"; // Always light mode
-
 
         rsx! {
             rect {
@@ -120,26 +89,17 @@ pub fn Node(prop: PropNode, id: usize) -> Element {
                 x: "{prop.x}", y: "{y_line1}",
                 text_anchor: "middle", dominant_baseline: "middle", font_size: "12", fill: "{main_text_color}",
                 style: "user-select: none; pointer-events: none;",
-                "{display_pubkey}"
+                "{account_name}"
             }
-            text { // Lamports
-                x: "{prop.x}", y: "{y_line2}",
-                text_anchor: "middle", dominant_baseline: "middle", font_size: "12", fill: "{main_text_color}",
-                style: "user-select: none; pointer-events: none;",
-                "{lamports_text}"
+            for (i,data) in prop.fields.iter().enumerate() {
+                text {
+                    x: "{prop.x}", y: "{prop.y + i as f32 * line_spacing}",
+                    text_anchor: "middle", dominant_baseline: "middle", font_size: "12", fill: "{data_text_color}",
+                    style: "user-select: none; pointer-events: none;",
+                    "{data.name}: {data.ty}"
+                }
             }
-            text { // Executable
-                x: "{prop.x}", y: "{y_line3}",
-                text_anchor: "middle", dominant_baseline: "middle", font_size: "12", fill: "{main_text_color}",
-                style: "user-select: none; pointer-events: none;",
-                "{executable_text}"
-            }
-            text { // Account Data Preview
-                x: "{prop.x}", y: "{y_line4}",
-                text_anchor: "middle", dominant_baseline: "middle", font_size: "10", fill: "{data_text_color}",
-                style: "user-select: none; pointer-events: none;",
-                "{data_preview}"
-            }
+
         }
     }
 }

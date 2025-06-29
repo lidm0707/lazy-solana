@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
+
+use crate::idl_helper::idl_node::{IDLNode, IDLNodeField};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Idl {
@@ -40,7 +44,7 @@ pub struct Arg {
     pub arg_type: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Account {
     pub name: String,
     pub discriminator: Vec<u8>,
@@ -71,18 +75,39 @@ impl Idl {
         serde_json::from_str(&str).unwrap()
     }
 
-    pub fn get_idl_accounts(&self) -> Vec<String> {
+    pub fn get_idl_idl_node(&self) -> Vec<IDLNode> {
+        let accounts = self.accounts.clone();
         let account_fields = self.types.clone();
-        let mut accounts_string = Vec::<String>::new();
-        for types in account_fields.iter() {
-            for field in types.type_detail.fields.clone().iter() {
-                accounts_string.push(format!(
-                    "{}::::{}",
-                    field.name.clone(),
-                    field.field_type.clone()
-                ))
-            }
+        let mut idl_nodes = Vec::<IDLNode>::new();
+        let mut temp_name_account: HashMap<String, Vec<StructField>> = HashMap::new();
+        for field in account_fields.iter() {
+            let field_name = field.name.clone();
+            let field_type = field.type_detail.fields.clone();
+            temp_name_account.insert(field_name, field_type);
         }
-        accounts_string
+
+        for account in accounts.iter() {
+            let account_name = account.name.clone();
+            let account_discriminator = account.discriminator.clone();
+
+            let temp_fields = temp_name_account.get(&account_name);
+            let account_fields = match temp_fields {
+                Some(fields) => fields
+                    .iter()
+                    .map(|field| IDLNodeField {
+                        name: field.name.clone(),
+                        ty: field.field_type.clone(),
+                    })
+                    .collect(),
+                None => Vec::new(),
+            };
+
+            idl_nodes.push(IDLNode::new(
+                account_name,
+                account_discriminator,
+                account_fields,
+            ));
+        }
+        idl_nodes
     }
 }
